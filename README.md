@@ -18,6 +18,11 @@ It is not published to the Chrome Web Store. Load it unpacked.
 The toolbar popup lists what applies to the current page, with a switch for
 this site and a switch for everywhere. The options page opens in a full tab.
 
+Switching something off or on applies to pages loaded afterwards. A per-site
+switch reloads the current tab for you. The everywhere switch does not reload
+open tabs, so a tab that was already open keeps its current behaviour until
+you reload it.
+
 ## Install
 
 ```bash
