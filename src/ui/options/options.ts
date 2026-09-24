@@ -2,12 +2,14 @@ import "./options.css";
 import { requestReconcile } from "../../core/messages.ts";
 import { renderBackup } from "./backup-view.ts";
 import { renderFeatures } from "./features-view.ts";
+import { renderUserscripts } from "./userscripts-view.ts";
 import { confirmLeave, isDirty, setDirtyCheck } from "./guard.ts";
 import { parseRoute, routeHash, type Route, type Tab } from "./route.ts";
 
 type View = (root: HTMLElement, route: Route) => Promise<void>;
-const views: Partial<Record<Tab, View>> = {
+const views: Record<Tab, View> = {
   features: renderFeatures,
+  userscripts: renderUserscripts,
   backup: renderBackup,
 };
 
@@ -24,7 +26,7 @@ async function show(): Promise<void> {
   // has moved on writes into a detached node instead of the page.
   const container = document.createElement("div");
   document.getElementById("view")!.replaceChildren(container);
-  await views[current.tab]?.(container, current);
+  await views[current.tab](container, current);
 }
 
 window.addEventListener("hashchange", () => {
