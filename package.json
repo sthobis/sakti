@@ -1,0 +1,25 @@
+{
+  "name": "sakti",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A personal Chrome extension: built-in page features and a userscript manager in one place.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "watch": "node scripts/build.ts --watch",
+    "release": "node scripts/build.ts --release --zip",
+    "icons": "node scripts/make-icons.ts",
+    "test": "node --test \"test/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.0",
+    "@types/node": "^26.6.2",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}
