@@ -1,0 +1,367 @@
+/* Comment Mode: the floating player window and its controls. Everything is
+   prefixed cmode- because these rules live inside YouTube's own page. */
+
+#cmode-player {
+  --cmode-accent: #8b7bff;
+  --cmode-glass: rgba(20, 20, 24, 0.62);
+  --cmode-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  position: fixed;
+  z-index: 3000;
+  width: 320px;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #000;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  container: cmode / inline-size;
+  transition: width 220ms var(--cmode-ease), height 220ms var(--cmode-ease),
+    left 220ms var(--cmode-ease), top 220ms var(--cmode-ease);
+}
+
+/* No easing while the pointer is moving, resizing or scrubbing. */
+#cmode-player.cmode-gesture {
+  transition: none;
+}
+
+/* --- The lifted YouTube player ------------------------------------------ */
+
+.cmode-video {
+  position: absolute !important;
+  z-index: -1;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+#cmode-player #movie_player > *:not(.ytp-caption-window-container) {
+  display: none;
+}
+
+#cmode-player #movie_player > .html5-video-container {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#cmode-player #movie_player > .html5-video-container .video-stream {
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* During an ad, let YouTube's ad overlay through so its real Skip button can
+   be clicked. The player comes above .cmode-ui but ignores the pointer,
+   except for the ad overlay's buttons, so dragging and our bar still work. */
+#cmode-player.cmode-ad #movie_player > .video-ads {
+  display: block;
+}
+
+#cmode-player.cmode-ad .cmode-video {
+  z-index: 0;
+  pointer-events: none;
+}
+
+#cmode-player.cmode-ad .video-ads button {
+  pointer-events: auto;
+}
+
+/* --- Overlay -------------------------------------------------------------- */
+
+.cmode-ui {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  font: 500 11px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #fff;
+  user-select: none;
+}
+
+#cmode-player.cmode-gesture .cmode-ui {
+  cursor: grabbing;
+}
+
+/* Controls stay out of the way until the pointer arrives or playback stops. */
+.cmode-bar,
+.cmode-close {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 160ms ease, visibility 160ms;
+}
+
+#cmode-player:hover .cmode-bar,
+#cmode-player:hover .cmode-close,
+#cmode-player.cmode-gesture .cmode-bar,
+#cmode-player.cmode-paused .cmode-bar {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cmode-bar,
+.cmode-menu,
+.cmode-close,
+.cmode-badge {
+  background: var(--cmode-glass);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* --- Buttons -------------------------------------------------------------- */
+
+.cmode-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.cmode-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.cmode-btn:active {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.cmode-btn:focus-visible {
+  outline: 2px solid var(--cmode-accent);
+  outline-offset: 1px;
+}
+
+.cmode-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.cmode-icon-solid {
+  fill: currentColor;
+  stroke-width: 1;
+}
+
+.cmode-icon text {
+  fill: currentColor;
+  stroke: none;
+  font: 700 7px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  text-anchor: middle;
+}
+
+.cmode-icon-play,
+#cmode-player.cmode-paused .cmode-icon-pause {
+  display: none;
+}
+
+#cmode-player.cmode-paused .cmode-icon-play {
+  display: block;
+}
+
+.cmode-close {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.cmode-close:hover {
+  background: rgba(20, 20, 24, 0.85);
+}
+
+.cmode-seek .cmode-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.cmode-close .cmode-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Control bar ---------------------------------------------------------- */
+
+.cmode-bar {
+  position: absolute;
+  z-index: 2;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  padding: 0 4px 3px;
+  border-radius: 10px;
+  cursor: default;
+}
+
+.cmode-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cmode-spacer {
+  flex: 1;
+}
+
+.cmode-time {
+  margin-left: 6px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmode-duration {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cmode-speed {
+  width: auto;
+  min-width: 36px;
+  padding: 0 6px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The smallest window has no room for the total duration. */
+@container cmode (max-width: 380px) {
+  .cmode-duration {
+    display: none;
+  }
+}
+
+/* Scrubber: a tall hit area around a thin track. */
+.cmode-scrub {
+  display: flex;
+  align-items: center;
+  height: 14px;
+  padding: 0 6px;
+  cursor: pointer;
+}
+
+.cmode-scrub-track {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: height 120ms ease;
+}
+
+.cmode-scrub:hover .cmode-scrub-track,
+#cmode-player.cmode-gesture .cmode-scrub-track {
+  height: 5px;
+}
+
+.cmode-scrub-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cmode-accent);
+}
+
+.cmode-scrub-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 120ms ease;
+}
+
+.cmode-scrub:hover .cmode-scrub-thumb,
+#cmode-player.cmode-gesture .cmode-scrub-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Seeking and speed are YouTube's call while an ad plays. */
+#cmode-player.cmode-ad .cmode-scrub,
+#cmode-player.cmode-ad .cmode-seek,
+#cmode-player.cmode-ad .cmode-speed {
+  display: none;
+}
+
+#cmode-player.cmode-ad .cmode-bar {
+  padding-top: 3px;
+}
+
+/* --- Size menu / volume badge --------------------------------------------- */
+
+.cmode-menu {
+  position: absolute;
+  z-index: 2;
+  right: 8px;
+  bottom: 58px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  cursor: default;
+}
+
+.cmode-menu[hidden] {
+  display: none;
+}
+
+.cmode-menu .cmode-btn {
+  font-weight: 700;
+}
+
+.cmode-badge {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 50%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 150ms ease;
+}
+
+.cmode-badge.cmode-badge-show {
+  opacity: 1;
+}
+
+/* --- Resize handles ------------------------------------------------------- */
+
+.cmode-resizer {
+  position: absolute;
+  z-index: 3;
+  width: 16px;
+  height: 16px;
+}
+
+.cmode-resizer[data-corner="tl"] { top: 0; left: 0; cursor: nwse-resize; }
+.cmode-resizer[data-corner="tr"] { top: 0; right: 0; cursor: nesw-resize; }
+.cmode-resizer[data-corner="bl"] { bottom: 0; left: 0; cursor: nesw-resize; }
+.cmode-resizer[data-corner="br"] { right: 0; bottom: 0; cursor: nwse-resize; }
+
+@media (prefers-reduced-motion: reduce) {
+  #cmode-player,
+  #cmode-player * {
+    transition: none !important;
+  }
+}
