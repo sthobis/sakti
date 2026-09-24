@@ -69,7 +69,10 @@ async function syncContentScripts(desired: ContentScriptSpec[]): Promise<void> {
 }
 
 async function syncUserScripts(desired: UserScriptSpec[]): Promise<void> {
-  if (!userScriptsAvailable()) return;
+  if (!userScriptsAvailable()) {
+    await chrome.storage.local.set({ userscriptErrors: {} });
+    return;
+  }
   const current = (await chrome.userScripts.getScripts()).map(normalizeUserScript);
   const { unregister, register } = diff(desired, current);
   if (unregister.length) await chrome.userScripts.unregister({ ids: unregister });
