@@ -101,7 +101,7 @@ export async function renderUserscripts(root: HTMLElement, route: Route): Promis
 
   function load(text: string, id: string | null): void {
     currentId = id;
-    savedSource = id ? text : "";
+    savedSource = text;
     source.value = text;
     editor.hidden = false;
     empty.hidden = true;
