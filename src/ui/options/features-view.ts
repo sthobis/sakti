@@ -8,15 +8,15 @@ import { readState, updateFeature } from "../../core/storage.ts";
 import { toggle } from "../common/toggle.ts";
 import type { Route } from "./route.ts";
 
-export async function renderFeatures(root: HTMLElement, route: Route): Promise<void> {
+export async function renderFeatures(root: HTMLElement, route: Route, scroll = true): Promise<void> {
   const { features } = await readState();
   const rerender = async () => {
     root.replaceChildren();
-    await renderFeatures(root, route);
+    await renderFeatures(root, route, false);
   };
   const cards = await Promise.all(registry.map((entry) => card(entry, featureState(features, entry.id), route, rerender)));
   root.append(el("div", { class: "page" }, cards));
-  if (route.id) document.getElementById(`feature-${route.id}`)?.scrollIntoView({ block: "center" });
+  if (scroll && route.id) document.getElementById(`feature-${route.id}`)?.scrollIntoView({ block: "center" });
 }
 
 async function card(entry: RegistryEntry, state: FeatureState, route: Route, rerender: () => Promise<void>): Promise<HTMLElement> {
