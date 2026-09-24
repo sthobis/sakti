@@ -106,6 +106,8 @@ export async function renderUserscripts(root: HTMLElement, route: Route): Promis
     editor.hidden = false;
     empty.hidden = true;
     deleteButton.hidden = id === null;
+    // The switch belongs to the routed script; hide it while editing anything else.
+    if (enabledSwitch) enabledSwitch.hidden = id === null || id !== selected?.id;
     refresh();
   }
 
