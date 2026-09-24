@@ -31,7 +31,7 @@ function describe(file: ExportFile): string {
 
 export async function renderBackup(root: HTMLElement, _route: Route): Promise<void> {
   const log = await readLog();
-  const status = el("p", { class: "status" });
+  const status = el("p", { class: "status", id: "backup-message" });
   const exportButton = el("button", { type: "button", class: "primary", id: "export", text: "Export everything" });
   const importButton = el("button", { type: "button", id: "import", text: "Import from file…" });
   const fileInput = el("input", { type: "file", accept: ".json,application/json", hidden: "" });
@@ -39,7 +39,7 @@ export async function renderBackup(root: HTMLElement, _route: Route): Promise<vo
   const rerender = async (message: string, isError = false) => {
     root.replaceChildren();
     await renderBackup(root, _route);
-    const next = root.querySelector(".status");
+    const next = root.querySelector("#backup-message");
     if (next) {
       next.textContent = message;
       next.classList.toggle("error", isError);
