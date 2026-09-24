@@ -22,7 +22,8 @@ sync, any network request made by the extension itself.
 - Manifest V3, Chrome 120+.
 - Unit of organisation is a **feature**, not a website. A feature declares
   where it runs.
-- Tooling: esbuild + TypeScript + `@types/chrome`. Nothing else at runtime.
+- Tooling: esbuild + TypeScript + `@types/chrome` + `@types/node`. Nothing
+  at runtime.
 - Content scripts are **registered dynamically** from the service worker via
   `chrome.scripting.registerContentScripts`; the manifest declares no static
   `content_scripts`.
@@ -36,31 +37,43 @@ sync, any network request made by the extension itself.
 ```
 sakti/
   manifest.json            hand-written base; build merges feature needs into it
-  package.json             esbuild, typescript, @types/chrome
-  tsconfig.json
-  scripts/build.ts         scan features/, bundle, write dist/ and registry
+  package.json             esbuild, typescript, @types/chrome, @types/node
+  tsconfig.json            browser code (src/, features/)
+  tsconfig.node.json       build scripts and tests
+  scripts/
+    build.ts               scan features/, bundle, write dist/ and registry
+    validate.ts            descriptor validation + registry entry (pure)
+    manifest.ts            manifest merge (pure)
+    zip.ts                 release zip writer
+    make-icons.ts          draws icons/*.png
   src/
+    registry.d.ts          type of the generated "sakti:registry" module
     core/
-      feature.ts           Feature type + defineFeature()
-      storage.ts           typed get/set/onChange over chrome.storage
-      settings.ts          per-feature settings handle for content scripts
+      feature.ts           Feature, RegistryEntry types + defineFeature()
       match.ts             match-pattern parser + URL test (pure)
+      state.ts             stored state shapes + helpers (pure)
+      backup.ts            export / import format (pure)
+      storage.ts           chrome.storage access for worker and pages
+      settings.ts          per-feature settings handle
       bridge.ts            isolated <-> MAIN world event channel
-      dom.ts               el(), icon(), trackPointer() helpers
+      dom.ts               el() element builder
+      messages.ts          page -> worker messages
     worker/
       index.ts             service worker entry: wires listeners
-      registrar.ts         reconcile registry + settings -> Chrome registrations
-      icon.ts              toolbar icon + badge
+      plan.ts              desired registrations + diff (pure)
+      registrar.ts         applies the plan to Chrome
+      badge.ts             toolbar badge
     ui/
-      common/              toggle switch, card styles, render helper, CSS vars
+      common/              toggle switch, download helper, shared CSS vars
       popup/               popup.html, popup.ts, popup.css
-      options/             options.html, options.ts, options.css, tabs below
-        features.ts
-        userscripts.ts     editor
-        backup.ts          export / import
+      options/             options.html, options.ts, options.css, route.ts, guard.ts
+        features-view.ts
+        userscripts-view.ts  editor
+        backup-view.ts       export / import
     userscripts/
       header.ts            ==UserScript== header parser (pure)
       id.ts                slug / id derivation (pure)
+      save.ts              save / rename / delete rules (pure)
   features/
     comment-mode/
       feature.ts
@@ -96,6 +109,7 @@ export default defineFeature({
   excludeMatches: [],                 // optional
   runAt: "document_idle",             // document_start | document_end | document_idle
   allFrames: false,
+  matchOriginAsFallback: false,       // also about:blank / data: frames
   scripts: {
     content: "./content.ts",          // optional, ISOLATED world
     main: "./main.ts",                // optional, MAIN world
@@ -124,13 +138,15 @@ is enabled on that page. Content scripts get settings through
 
 ### Migrated features
 
-- **comment-mode**: `content.js` → `content.ts` with helpers moved to
-  `core/dom.ts`; `bridge.js` → `main.ts` using `core/bridge.ts`;
+- **comment-mode**: `content.js` → `content.ts` with `el()` moved to
+  `core/dom.ts` (`icon()` and `trackPointer()` stay, they depend on Comment
+  Mode's own state); `bridge.js` → `main.ts` using `core/bridge.ts`;
   `content.css` unchanged. The global "activated" flag is dropped; Sakti's
   per-feature `enabled` replaces it. `geometry` stays in `sync`.
 - **enable-right-click**: `inject.js` and `popup-guard.js` become one
   `main.ts`, `runAt: "document_start"`, `allFrames: true`, `matches:
-  ["<all_urls>"]`, `perSite: true`. Its `disabledHosts` migrates into the
+  ["<all_urls>"]`, `matchOriginAsFallback: true`, `perSite: true`. Its
+  `disabledHosts` migrates into the
   Sakti settings model; the old `sw.js` badge logic is subsumed by
   `worker/icon.ts`.
 
@@ -187,7 +203,14 @@ properties and cannot clear `excludeMatches`. The worker then applies the
 lists, unregister first.
 
 Registration changes affect pages loaded afterwards. The popup reloads the
-current tab after a per-site toggle; global toggles reload nothing.
+current tab after a per-site toggle; global toggles reload nothing. Before
+reloading, the popup sends `{ type: "sakti:reconcile" }` and waits for the
+worker's reply, so the page never reloads ahead of the new registrations.
+
+Chrome's rejection messages for userscripts are written to a separate
+`userscriptErrors` key (`{ [scriptId]: message }`), rewritten on every pass.
+The worker only reacts to changes of `features` and `userscripts`, so writing
+errors cannot trigger another reconcile.
 
 If `chrome.userScripts` is absent (user has not enabled "Allow User Scripts"
 on Chrome 138+, or Developer Mode on 120–137), userscripts are skipped
@@ -211,7 +234,8 @@ create-new, carrying over `enabled` and `disabledHosts`.
 Supported: `@name` (required), `@namespace`, `@description`, `@version`,
 `@match` (one or more, required), `@exclude`, `@run-at`
 (`document-start|end|idle`, default idle), `@grant` (only `none` is
-meaningful). `@include` is rejected with a message; `@require` and other
+meaningful; an absent `@grant` is treated like `none`, matching Tampermonkey),
+`@exclude-match` (same as `@exclude`). `@include` is rejected with a message; `@require` and other
 keys are ignored and reported as "unsupported, ignored" in the editor.
 Parsing happens at save time; the registrar reads `meta`, never source.
 
@@ -232,14 +256,20 @@ Options page tab. Export writes one JSON file:
   "sakti": 1,
   "exportedAt": "2026-09-24T00:00:00Z",
   "features": { ... },
-  "settings": { "feature:comment-mode": { ... } },
+  "settings": {
+    "sync":  { "feature:comment-mode": { ... } },
+    "local": { }
+  },
   "userscripts": { ... }
 }
 ```
 
-Import merges by id: entries in the file replace same-id entries, local-only
-entries stay. Nothing is deleted by an import. `updatedAt` is shown so the
-user can judge which side is newer before importing.
+Settings are split by storage area so an import writes each value back where
+it came from. Import merges by id: entries in the file replace same-id
+entries, local-only entries stay. Nothing is deleted by an import. Userscript
+meta and ids are re-derived from each script's source on import, never taken
+from the file. The confirmation shows the file's `exportedAt` so the user can
+judge which side is newer before importing.
 
 ## UI
 
@@ -276,8 +306,10 @@ current tab's host, or nothing. There is no global kill switch.
 
 ## Build
 
-`scripts/build.ts`, run with `node --experimental-strip-types` (Node ≥ 22.6).
-Flags: `--watch`, `--release`, `--zip`.
+`scripts/build.ts`, run directly with `node` (Node ≥ 22.18 strips types
+without a flag). This means build and test code uses only erasable
+TypeScript syntax, `import type` for type-only imports, and explicit `.ts`
+extensions on relative imports. Flags: `--watch`, `--release`, `--zip`.
 
 1. Discover `features/*/feature.ts`, import, validate descriptors.
 2. esbuild, `target: "chrome120"`, `format: "iife"` for every feature bundle,
@@ -310,9 +342,10 @@ No browser automation in the repo.
 
 - Storage calls from content scripts wrap in try/catch: once the extension
   is reloaded the script is orphaned and `chrome.storage` throws.
-- Registrar failures (bad pattern from a userscript) are caught per entry,
-  logged, and written to `userscripts[id].error` so the editor can display
-  them; other entries still register.
+- Registrar failures (bad pattern from a userscript) are caught per entry
+  and written to `userscriptErrors[id]` so the editor can display them;
+  other entries still register. Built-in feature failures are logged to the
+  worker console.
 - Missing `chrome.userScripts` is not an error; it is a documented state
   the options page explains.
 
