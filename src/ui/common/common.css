@@ -78,6 +78,10 @@ button.danger:hover {
   height: 18px;
 }
 
+.switch[hidden] {
+  display: none;
+}
+
 .switch input {
   position: absolute;
   inset: 0;
