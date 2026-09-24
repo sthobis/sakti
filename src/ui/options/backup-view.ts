@@ -67,10 +67,20 @@ export async function renderBackup(root: HTMLElement, _route: Route): Promise<vo
     }
     const question = `${describe(parsed.file)}\n\nEntries with the same id will be replaced. Nothing here is deleted. Import?`;
     if (!confirm(question)) return;
-    await writeSnapshot(mergeImport(await readSnapshot(), parsed.file));
-    await requestReconcile();
-    await writeLog({ importedAt: new Date().toISOString() });
-    await rerender("Imported.");
+    try {
+      await writeSnapshot(mergeImport(await readSnapshot(), parsed.file));
+      await requestReconcile();
+      await writeLog({ importedAt: new Date().toISOString() });
+      await rerender("Imported.");
+    } catch (error) {
+      try {
+        await requestReconcile();
+      } catch {
+        // best effort: whatever was written should still take effect
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      await rerender(`Import failed: ${message}`, true);
+    }
   });
 
   root.append(
