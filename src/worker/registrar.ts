@@ -56,25 +56,10 @@ function toChromeUserScript(spec: UserScriptSpec): chrome.userScripts.Registered
 
 async function syncContentScripts(desired: ContentScriptSpec[]): Promise<void> {
   const current = (await chrome.scripting.getRegisteredContentScripts()).map(normalizeContentScript);
-  const currentIds = new Set(current.map((spec) => spec.id));
   const { unregister, register } = diff(desired, current);
-  // An id already registered just needs updateContentScripts, not a full
-  // unregister+register: that pair leaves a real gap where nothing of that
-  // id is registered, even though the id itself never stopped being desired.
-  const toUpdate = register.filter((spec) => currentIds.has(spec.id));
-  const toRegister = register.filter((spec) => !currentIds.has(spec.id));
-  const registerIds = new Set(register.map((spec) => spec.id));
-  const toUnregister = unregister.filter((id) => !registerIds.has(id));
-  if (toUnregister.length) await chrome.scripting.unregisterContentScripts({ ids: toUnregister });
+  if (unregister.length) await chrome.scripting.unregisterContentScripts({ ids: unregister });
   // One at a time, so one bad descriptor cannot block the others.
-  for (const spec of toUpdate) {
-    try {
-      await chrome.scripting.updateContentScripts([toChromeContentScript(spec)]);
-    } catch (error) {
-      console.error(`[sakti] could not update ${spec.id}`, error);
-    }
-  }
-  for (const spec of toRegister) {
+  for (const spec of register) {
     try {
       await chrome.scripting.registerContentScripts([toChromeContentScript(spec)]);
     } catch (error) {
@@ -86,27 +71,13 @@ async function syncContentScripts(desired: ContentScriptSpec[]): Promise<void> {
 async function syncUserScripts(desired: UserScriptSpec[]): Promise<void> {
   if (!userScriptsAvailable()) return;
   const current = (await chrome.userScripts.getScripts()).map(normalizeUserScript);
-  const currentIds = new Set(current.map((spec) => spec.id));
   const { unregister, register } = diff(desired, current);
-  // Same reasoning as syncContentScripts: update in place instead of
-  // unregister+register so an id that stays desired is never briefly gone.
-  const toUpdate = register.filter((spec) => currentIds.has(spec.id));
-  const toRegister = register.filter((spec) => !currentIds.has(spec.id));
-  const registerIds = new Set(register.map((spec) => spec.id));
-  const toUnregister = unregister.filter((id) => !registerIds.has(id));
-  if (toUnregister.length) await chrome.userScripts.unregister({ ids: toUnregister });
+  if (unregister.length) await chrome.userScripts.unregister({ ids: unregister });
 
   // A script Chrome rejected is not registered, so it is retried (and its error
   // recorded again) on every pass until it is fixed or disabled.
   const errors: Record<string, string> = {};
-  for (const spec of toUpdate) {
-    try {
-      await chrome.userScripts.update([toChromeUserScript(spec)]);
-    } catch (error) {
-      errors[spec.id.slice(USERSCRIPT_PREFIX.length)] = error instanceof Error ? error.message : String(error);
-    }
-  }
-  for (const spec of toRegister) {
+  for (const spec of register) {
     try {
       await chrome.userScripts.register([toChromeUserScript(spec)]);
     } catch (error) {
