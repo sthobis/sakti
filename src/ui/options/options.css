@@ -1,0 +1,306 @@
+@import "../common/common.css";
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+header h1 {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+nav {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  margin-left: 16px;
+}
+
+nav a {
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+nav a:hover {
+  color: var(--text);
+}
+
+nav a[aria-current="page"] {
+  background: var(--panel);
+  color: var(--text);
+}
+
+#version {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+}
+
+.page {
+  max-width: 760px;
+}
+
+.card {
+  margin-bottom: 12px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.card.highlight {
+  border-color: var(--accent);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-head h2 {
+  flex: 1;
+  font-size: 15px;
+}
+
+.card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.hosts,
+.settings {
+  margin-top: 12px;
+}
+
+.hosts h3,
+.settings h3 {
+  margin-bottom: 6px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.host {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 6px 6px 0;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.host button {
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+}
+
+.settings {
+  display: grid;
+  gap: 8px;
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting input[type="number"],
+.setting input[type="text"],
+.setting select {
+  padding: 4px 8px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+}
+
+.notice p {
+  flex: 1;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.empty {
+  color: var(--faint);
+}
+
+/* Userscripts tab */
+.scripts {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  height: calc(100vh - 110px);
+}
+
+.script-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.script-list ul {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.script-list li a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.script-list li a:hover {
+  background: var(--panel);
+}
+
+.script-list li a[aria-current="true"] {
+  background: var(--panel);
+  outline: 1px solid var(--accent);
+}
+
+.script-list li a.off {
+  color: var(--faint);
+}
+
+.script-list .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.editor-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.editor[hidden] {
+  display: none;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  min-height: 1.5em;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.meta b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.messages {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+.messages .error {
+  color: var(--danger);
+}
+
+.messages .warning {
+  color: var(--warning);
+}
+
+#source {
+  flex: 1;
+  min-height: 300px;
+  padding: 12px;
+  resize: none;
+  background: #111114;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: var(--mono);
+  tab-size: 2;
+}
+
+#source:focus {
+  outline: 1px solid var(--accent);
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-actions .spacer {
+  flex: 1;
+}
