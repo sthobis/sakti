@@ -138,7 +138,7 @@ is enabled on that page. Content scripts get settings through
 
 ### Migrated features
 
-- **comment-mode**: `content.js` → `content.ts` with `el()` moved to
+- **comment-mode**: source is the `sthobis/comment-mode` repo (C:/Projects/comment-mode, v1.2.2). `content.js` → `content.ts` with `el()` moved to
   `core/dom.ts` (`icon()` and `trackPointer()` stay, they depend on Comment
   Mode's own state); `bridge.js` → `main.ts` using `core/bridge.ts`;
   `content.css` unchanged. The global "activated" flag is dropped; Sakti's

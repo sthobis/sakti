@@ -23,7 +23,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   const EDGE_MARGIN = 8;
   const TOP_MARGIN = 64; // stay clear of YouTube's masthead
 
-  const SKIP_SECONDS = 10;
+  const SKIP_SECONDS = 5;
   const VOLUME_STEP = 5; // percent, per wheel notch
   const WHEEL_NOTCH_PX = 60;
   const DRAG_THRESHOLD_PX = 4;
@@ -41,13 +41,17 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     br: { left: false, top: false },
   };
 
-  // 24x24 icons. Stroked unless `solid`; `text` is drawn in the middle.
+  // Until YouTube's player reports the speeds it really offers.
+  const DEFAULT_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+  // 24x24 icons. Stroked unless `solid`; `text` is drawn centred on `textY`.
   const SVG_NS = "http://www.w3.org/2000/svg";
-  const ICONS: Record<string, { d: string; solid?: boolean; text?: string }> = {
+  const ICONS: Record<string, { d: string; solid?: boolean; text?: string; textY?: number }> = {
     play: { d: "M8 5.5v13l10.5-6.5z", solid: true },
     pause: { d: "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z", solid: true },
-    back: { d: "M12 6a7 7 0 1 1-6.06 3.5M15 3l-3 3 3 3", text: String(SKIP_SECONDS) },
-    forward: { d: "M12 6a7 7 0 1 0 6.06 3.5M9 3l3 3-3 3", text: String(SKIP_SECONDS) },
+    back: { d: "M12 6a7 7 0 1 1-6.06 3.5M15 3l-3 3 3 3", text: String(SKIP_SECONDS), textY: 15.6 },
+    forward: { d: "M12 6a7 7 0 1 0 6.06 3.5M9 3l3 3-3 3", text: String(SKIP_SECONDS), textY: 15.6 },
+    captions: { d: "M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z", text: "CC", textY: 14.5 },
     size: { d: "M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6" },
     top: { d: "M12 19V6M6 12l6-6 6 6" },
     close: { d: "M6 6l12 12M18 6L6 18" },
@@ -178,6 +182,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     updatePlayState(video);
     updateSpeed(video);
     updateTime();
+    command({ type: "getState" });
   }
 
   function dock() {
@@ -217,7 +222,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // --- DOM -----------------------------------------------------------------
 
   function icon(name: string) {
-    const { d, solid, text } = ICONS[name];
+    const { d, solid, text, textY } = ICONS[name];
     const svg = document.createElementNS(SVG_NS, "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
     svg.setAttribute("class", `cmode-icon cmode-icon-${name}${solid ? " cmode-icon-solid" : ""}`);
@@ -228,7 +233,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     if (text) {
       const label = document.createElementNS(SVG_NS, "text");
       label.setAttribute("x", "12");
-      label.setAttribute("y", "15.6");
+      label.setAttribute("y", String(textY));
       label.textContent = text;
       svg.append(label);
     }
@@ -252,12 +257,19 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     return el("div", { class: "cmode-ui" }, [
       ...Object.keys(CORNERS).map((corner) => el("div", { class: "cmode-resizer", dataset: { corner } })),
       button("close", "Close until the next video", [icon("close")], { class: "cmode-btn cmode-close" }),
+      // Click zones over the picture: back 10s | play/pause | forward 10s.
+      el("div", { class: "cmode-zones" }, [
+        el("div", { class: "cmode-zone", dataset: { action: "back" }, title: `Back ${SKIP_SECONDS} seconds` }, [icon("back")]),
+        el("div", { class: "cmode-zone", dataset: { action: "play" }, title: "Play or pause" }, [icon("play"), icon("pause")]),
+        el("div", { class: "cmode-zone", dataset: { action: "forward" }, title: `Forward ${SKIP_SECONDS} seconds` }, [icon("forward")]),
+      ]),
       el("div", { class: "cmode-badge" }),
       el(
         "div",
-        { class: "cmode-menu", hidden: "" },
+        { class: "cmode-menu", hidden: "", dataset: { menu: "size" } },
         Object.keys(SIZES).map((size) => button("resize", `Size ${size}`, [size], { dataset: { action: "resize", size } }))
       ),
+      el("div", { class: "cmode-menu", hidden: "", dataset: { menu: "speed" } }, rateButtons(DEFAULT_RATES)),
       el("div", { class: "cmode-bar" }, [
         el("div", { class: "cmode-scrub", title: "Seek" }, [
           el("div", { class: "cmode-scrub-track" }, [
@@ -266,20 +278,27 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
           ]),
         ]),
         el("div", { class: "cmode-row" }, [
-          button("back", `Back ${SKIP_SECONDS} seconds`, [icon("back")], { class: "cmode-btn cmode-seek" }),
-          button("play", "Play or pause", [icon("play"), icon("pause")]),
-          button("forward", `Forward ${SKIP_SECONDS} seconds`, [icon("forward")], { class: "cmode-btn cmode-seek" }),
           el("div", { class: "cmode-time" }, [
             el("span", { class: "cmode-current", text: "0:00" }),
             el("span", { class: "cmode-duration" }),
           ]),
           el("div", { class: "cmode-spacer" }),
-          button("speed", "Playback speed (click or scroll)", ["1x"], { class: "cmode-btn cmode-speed" }),
-          button("menu", "Window size", [icon("size")]),
+          button("captions", "Subtitles", [icon("captions")], { class: "cmode-btn cmode-captions", "aria-pressed": "false" }),
+          button("menu", "Playback speed (click to choose, scroll to step)", ["1x"], {
+            class: "cmode-btn cmode-speed",
+            dataset: { action: "menu", menu: "speed" },
+          }),
+          button("menu", "Window size", [icon("size")], { dataset: { action: "menu", menu: "size" } }),
           button("top", "Back to the top of the page", [icon("top")]),
         ]),
       ]),
     ]);
+  }
+
+  function rateButtons(rates: number[]) {
+    return rates.map((rate) =>
+      button("rate", `${rate}x speed`, [`${rate}x`], { role: "menuitemradio", dataset: { action: "rate", rate: String(rate) } })
+    );
   }
 
   // --- Geometry ------------------------------------------------------------
@@ -341,14 +360,21 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // --- Controls ------------------------------------------------------------
 
   function bindControls(video: HTMLVideoElement) {
-    const menu = wrapper!.querySelector<HTMLElement>(".cmode-menu")!;
+    const menus = [...wrapper!.querySelectorAll<HTMLElement>(".cmode-menu")];
+    const closeMenus = (except?: HTMLElement) => menus.forEach((menu) => menu !== except && (menu.hidden = true));
 
     const actions: Record<string, (btn?: HTMLElement) => void> = {
       play: () => togglePlay(video),
-      back: () => seekTo(video, video.currentTime - SKIP_SECONDS),
-      forward: () => seekTo(video, video.currentTime + SKIP_SECONDS),
-      speed: () => !isAd() && command({ type: "rateStep", step: 1, wrap: true }),
-      menu: () => (menu.hidden = !menu.hidden),
+      // While paused the whole picture is one play button.
+      back: () => (video.paused ? video.play() : skip(video, -SKIP_SECONDS)),
+      forward: () => (video.paused ? video.play() : skip(video, SKIP_SECONDS)),
+      captions: () => command({ type: "toggleCaptions" }),
+      rate: (btn) => !isAd() && command({ type: "setRate", rate: Number(btn!.dataset.rate) }),
+      menu: (btn) => {
+        const menu = menus.find((m) => m.dataset.menu === btn!.dataset.menu);
+        closeMenus(menu);
+        menu!.hidden = !menu!.hidden;
+      },
       resize: (btn) => resizeTo(SIZES[btn!.dataset.size as keyof typeof SIZES]),
       top: () => window.scrollTo({ top: 0, behavior: "smooth" }),
       close: () => {
@@ -373,12 +399,11 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
       // Keep clicks away from YouTube's document-level handlers.
       e.stopPropagation();
       const btn = (e.target as Element).closest<HTMLElement>("[data-action]");
-      if (btn && btn.dataset.action !== "menu") menu.hidden = true;
+      if (!btn || btn.dataset.action !== "menu") closeMenus();
       if (btn) actions[btn.dataset.action!](btn);
-      else if (!(e.target as Element).closest(".cmode-bar, .cmode-menu, .video-ads")) togglePlay(video);
     });
     wrapper!.addEventListener("dblclick", (e) => e.stopPropagation());
-    wrapper!.addEventListener("mouseleave", () => (menu.hidden = true));
+    wrapper!.addEventListener("mouseleave", () => closeMenus());
 
     wrapper!.addEventListener("mousedown", startDrag);
     wrapper!.addEventListener("wheel", onWheel, { passive: false });
@@ -394,7 +419,14 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     play: (e) => updatePlayState(e.target as HTMLVideoElement),
     pause: (e) => updatePlayState(e.target as HTMLVideoElement),
     ratechange: (e) => updateSpeed(e.target as HTMLVideoElement),
+    loadeddata: () => command({ type: "getState" }), // next video: speeds and captions may differ
   };
+
+  function skip(video: HTMLVideoElement, seconds: number) {
+    if (isAd()) return;
+    seekTo(video, video.currentTime + seconds);
+    showBadge(`${seconds > 0 ? "+" : ""}${seconds}s`);
+  }
 
   function togglePlay(video: HTMLVideoElement) {
     if (video.paused) video.play();
@@ -413,7 +445,21 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   }
 
   function updateSpeed(video: HTMLVideoElement) {
-    if (wrapper) wrapper.querySelector(".cmode-speed")!.textContent = `${video.playbackRate}x`;
+    if (!wrapper) return;
+    wrapper.querySelector(".cmode-speed")!.textContent = `${video.playbackRate}x`;
+    for (const btn of wrapper.querySelectorAll<HTMLElement>("[data-rate]")) {
+      btn.setAttribute("aria-checked", String(Number(btn.dataset.rate) === video.playbackRate));
+    }
+  }
+
+  // The speeds on offer come from YouTube's player; rebuild the menu if they
+  // are not the ones it was built with.
+  function updateRates(rates: number[]) {
+    const menu = wrapper!.querySelector<HTMLElement>('[data-menu="speed"].cmode-menu')!;
+    const current = [...menu.querySelectorAll<HTMLElement>("[data-rate]")].map((btn) => Number(btn.dataset.rate));
+    if (rates.length === current.length && rates.every((rate, i) => rate === current[i])) return;
+    menu.replaceChildren(...rateButtons(rates));
+    updateSpeed(wrapper!.querySelector<HTMLVideoElement>(VIDEO)!);
   }
 
   // --- Ads / end of video --------------------------------------------------
@@ -436,7 +482,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
 
   // --- Volume / speed ------------------------------------------------------
 
-  // Volume and speed go through YouTube's player API (see main.ts). Setting
+  // Volume, speed and subtitles go through YouTube's player API (see main.ts). Setting
   // them on the <video> directly leaves YouTube's own controls and remembered
   // settings out of sync.
   const bridge = createChannel<PlayerCommand, PlayerState>("comment-mode", "isolated");
@@ -447,8 +493,14 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
 
   bridge.onMessage((state) => {
     if (!wrapper) return;
+    if (Array.isArray(state.rates) && state.rates.length) updateRates(state.rates);
+    wrapper.querySelector(".cmode-captions")!.setAttribute("aria-pressed", String(Boolean(state.captions)));
+
     if (typeof state.volume === "number") {
       showBadge(state.muted ? "Muted" : `Volume ${Math.round(state.volume)}%`);
+    } else if (state.captionsToggled) {
+      if (state.captions) showBadge("Subtitles on");
+      else showBadge(state.hasCaptions ? "Subtitles off" : "No subtitles for this video");
     }
   });
 

@@ -50,6 +50,14 @@
   left: 0 !important;
 }
 
+/* Subtitles are laid out inside this box, so shortening it while the control
+   bar shows keeps them readable above the bar. */
+#cmode-player:hover #movie_player > .ytp-caption-window-container,
+#cmode-player.cmode-gesture #movie_player > .ytp-caption-window-container,
+#cmode-player.cmode-paused #movie_player > .ytp-caption-window-container {
+  height: calc(100% - 56px) !important;
+}
+
 /* During an ad, let YouTube's ad overlay through so its real Skip button can
    be clicked. The player comes above .cmode-ui but ignores the pointer,
    except for the ad overlay's buttons, so dragging and our bar still work. */
@@ -164,6 +172,26 @@
   text-anchor: middle;
 }
 
+.cmode-icon-captions text {
+  font-size: 6.5px;
+}
+
+/* A switched-on toggle (subtitles) gets an accent underline. */
+.cmode-btn[aria-pressed] {
+  position: relative;
+}
+
+.cmode-btn[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 2px;
+  left: 6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--cmode-accent);
+}
+
 .cmode-icon-play,
 #cmode-player.cmode-paused .cmode-icon-pause {
   display: none;
@@ -171,6 +199,16 @@
 
 #cmode-player.cmode-paused .cmode-icon-play {
   display: block;
+}
+
+/* Paused: the whole picture resumes playback, so only the play icon shows. */
+#cmode-player.cmode-paused .cmode-zone[data-action="play"] .cmode-icon-play {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#cmode-player.cmode-paused .cmode-zone:not([data-action="play"]) .cmode-icon {
+  display: none;
 }
 
 .cmode-close {
@@ -187,14 +225,57 @@
   background: rgba(20, 20, 24, 0.85);
 }
 
-.cmode-seek .cmode-icon {
-  width: 20px;
-  height: 20px;
-}
-
 .cmode-close .cmode-icon {
   width: 14px;
   height: 14px;
+}
+
+/* --- Click zones ------------------------------------------------------------
+   The picture is split 40 / 20 / 40: back 10s, play/pause, forward 10s. Each
+   zone shows its icon while the pointer is over it. The zones are also the
+   drag surface, so no buttons here: a plain div keeps startDrag happy. */
+
+.cmode-zones {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.cmode-zone {
+  display: flex;
+  flex: 0 0 40%;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmode-zone[data-action="play"] {
+  flex-basis: 20%;
+}
+
+.cmode-zone .cmode-icon {
+  width: 30px;
+  height: 30px;
+  padding: 9px;
+  border-radius: 50%;
+  background: var(--cmode-glass);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.cmode-zone:hover .cmode-icon,
+#cmode-player.cmode-paused .cmode-zone[data-action="play"] .cmode-icon-play {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#cmode-player.cmode-gesture .cmode-zone .cmode-icon {
+  opacity: 0;
+}
+
+.cmode-zone .cmode-icon text {
+  font-size: 6.5px;
 }
 
 /* --- Control bar ---------------------------------------------------------- */
@@ -293,10 +374,11 @@
   transform: translate(-50%, -50%) scale(1);
 }
 
-/* Seeking and speed are YouTube's call while an ad plays. */
+/* Seeking, speed and subtitles are YouTube's call while an ad plays. */
 #cmode-player.cmode-ad .cmode-scrub,
-#cmode-player.cmode-ad .cmode-seek,
-#cmode-player.cmode-ad .cmode-speed {
+#cmode-player.cmode-ad .cmode-zone:not([data-action="play"]) .cmode-icon,
+#cmode-player.cmode-ad .cmode-speed,
+#cmode-player.cmode-ad .cmode-captions {
   display: none;
 }
 
@@ -304,7 +386,7 @@
   padding-top: 3px;
 }
 
-/* --- Size menu / volume badge --------------------------------------------- */
+/* --- Menus / badge ---------------------------------------------------------- */
 
 .cmode-menu {
   position: absolute;
@@ -318,12 +400,36 @@
   cursor: default;
 }
 
-.cmode-menu[hidden] {
-  display: none;
-}
-
 .cmode-menu .cmode-btn {
   font-weight: 700;
+}
+
+/* Speed menu: two columns while the window is short, a plain list once
+   there is room for one. */
+.cmode-menu[data-menu="speed"] {
+  right: 40px;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+}
+
+.cmode-menu[data-menu="speed"] .cmode-btn {
+  width: 46px;
+  height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmode-menu .cmode-btn[aria-checked="true"] {
+  background: var(--cmode-accent);
+}
+
+@container cmode (min-width: 600px) {
+  .cmode-menu[data-menu="speed"] {
+    grid-template-columns: auto;
+  }
+}
+
+.cmode-menu[hidden] {
+  display: none;
 }
 
 .cmode-badge {
