@@ -5,6 +5,9 @@ import type { Snapshot } from "./backup.ts";
 import { pickSettings } from "./backup.ts";
 import type { FeatureState, FeaturesState, UserscriptErrors, UserscriptRecord, UserscriptsState } from "./state.ts";
 import { featureState } from "./state.ts";
+import { createQueue } from "./queue.ts";
+
+const serialize = createQueue();
 
 export interface StoredState {
   features: FeaturesState;
@@ -22,15 +25,19 @@ export async function readState(): Promise<StoredState> {
 }
 
 export async function updateFeature(id: string, change: (state: FeatureState) => FeatureState): Promise<void> {
-  const { features } = await readState();
-  await chrome.storage.local.set({ features: { ...features, [id]: change(featureState(features, id)) } });
+  return serialize(async () => {
+    const { features } = await readState();
+    await chrome.storage.local.set({ features: { ...features, [id]: change(featureState(features, id)) } });
+  });
 }
 
 export async function updateUserscript(id: string, change: (record: UserscriptRecord) => UserscriptRecord): Promise<void> {
-  const { userscripts } = await readState();
-  const record = userscripts[id];
-  if (!record) return;
-  await chrome.storage.local.set({ userscripts: { ...userscripts, [id]: change(record) } });
+  return serialize(async () => {
+    const { userscripts } = await readState();
+    const record = userscripts[id];
+    if (!record) return;
+    await chrome.storage.local.set({ userscripts: { ...userscripts, [id]: change(record) } });
+  });
 }
 
 export async function writeUserscripts(userscripts: UserscriptsState): Promise<void> {

@@ -4,6 +4,9 @@
 
 import type { Feature, SettingDef, StorageAreaName } from "./feature.ts";
 import { SETTINGS_PREFIX } from "./state.ts";
+import { createQueue } from "./queue.ts";
+
+const serialize = createQueue();
 
 export interface SettingsHandle<S = Record<string, unknown>> {
   get<K extends keyof S & string>(name: K): Promise<S[K]>;
@@ -38,13 +41,15 @@ export function settingsHandle(featureId: string, defs: Record<string, SettingDe
       }
     },
     async set(name, value) {
-      try {
-        const area = areaOf(name);
-        const values = await readValues(area);
-        await storageArea(area).set({ [key]: { ...values, [name]: value } });
-      } catch {
-        // orphaned script: nothing to save to
-      }
+      await serialize(async () => {
+        try {
+          const area = areaOf(name);
+          const values = await readValues(area);
+          await storageArea(area).set({ [key]: { ...values, [name]: value } });
+        } catch {
+          // orphaned script: nothing to save to
+        }
+      });
     },
     onChange(name, listener) {
       try {
