@@ -11,7 +11,7 @@ It is not published to the Chrome Web Store. Load it unpacked.
 
 | Feature | Runs on | What it does |
 |---|---|---|
-| Comment Mode | youtube.com | Keeps the video playing in a floating window while you read the comments. Timestamps seek without scrolling back up. |
+| YouTube Float | youtube.com | Keeps the video playing in a floating window while you read the comments. Timestamps seek without scrolling back up. |
 | Enable Right Click | every site | Restores the native context menu and blocks scripted popup and new-tab ads. Can be switched off per site. |
 | Google Region | google.com, incognito only | Sets the results region to the United States, which incognito windows otherwise forget every session. Needs "Allow in Incognito" switched on for Sakti. |
 | Userscripts | where each script says | Paste a script or open a `.user.js` file in the options page. |

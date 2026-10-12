@@ -8,8 +8,8 @@ export interface Geometry {
 }
 
 export default defineFeature({
-  id: "comment-mode",
-  name: "Comment Mode",
+  id: "youtube-float",
+  name: "YouTube Float",
   description: "Keeps the YouTube player floating while you read the comments. Timestamps seek without losing your place.",
   matches: ["https://www.youtube.com/*"],
   runAt: "document_idle",

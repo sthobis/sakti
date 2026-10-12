@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { featureState, toggleHost } from "../src/core/state.ts";
 
 test("features default to enabled everywhere", () => {
-  assert.deepEqual(featureState({}, "comment-mode"), { enabled: true, disabledHosts: [] });
-  const stored = { "comment-mode": { enabled: false, disabledHosts: ["a.com"] } };
-  assert.deepEqual(featureState(stored, "comment-mode"), { enabled: false, disabledHosts: ["a.com"] });
+  assert.deepEqual(featureState({}, "youtube-float"), { enabled: true, disabledHosts: [] });
+  const stored = { "youtube-float": { enabled: false, disabledHosts: ["a.com"] } };
+  assert.deepEqual(featureState(stored, "youtube-float"), { enabled: false, disabledHosts: ["a.com"] });
 });
 
 test("toggleHost adds and removes a host without duplicates", () => {

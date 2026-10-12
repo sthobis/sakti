@@ -4,9 +4,9 @@ import type { RegistryEntry } from "../src/core/feature.ts";
 import type { UserscriptsState } from "../src/core/state.ts";
 import { desiredContentScripts, desiredUserScripts, diff, normalizeContentScript, normalizeUserScript } from "../src/worker/plan.ts";
 
-const COMMENT_MODE: RegistryEntry = {
-  id: "comment-mode",
-  name: "Comment Mode",
+const YOUTUBE_FLOAT: RegistryEntry = {
+  id: "youtube-float",
+  name: "YouTube Float",
   description: "d",
   matches: ["https://www.youtube.com/*"],
   excludeMatches: [],
@@ -16,9 +16,9 @@ const COMMENT_MODE: RegistryEntry = {
   perSite: false,
   settings: {},
   files: {
-    content: "features/comment-mode/content.js",
-    main: "features/comment-mode/main.js",
-    css: "features/comment-mode/content.css",
+    content: "features/youtube-float/content.js",
+    main: "features/youtube-float/main.js",
+    css: "features/youtube-float/content.css",
   },
 };
 
@@ -37,13 +37,13 @@ const RIGHT_CLICK: RegistryEntry = {
 };
 
 test("each enabled feature becomes one registration per world", () => {
-  assert.deepEqual(desiredContentScripts([COMMENT_MODE, RIGHT_CLICK], {}), [
+  assert.deepEqual(desiredContentScripts([YOUTUBE_FLOAT, RIGHT_CLICK], {}), [
     {
-      id: "comment-mode",
+      id: "youtube-float",
       matches: ["https://www.youtube.com/*"],
       excludeMatches: [],
-      js: ["features/comment-mode/content.js"],
-      css: ["features/comment-mode/content.css"],
+      js: ["features/youtube-float/content.js"],
+      css: ["features/youtube-float/content.css"],
       world: "ISOLATED",
       runAt: "document_idle",
       allFrames: false,
@@ -51,10 +51,10 @@ test("each enabled feature becomes one registration per world", () => {
       persistAcrossSessions: true,
     },
     {
-      id: "comment-mode:main",
+      id: "youtube-float:main",
       matches: ["https://www.youtube.com/*"],
       excludeMatches: [],
-      js: ["features/comment-mode/main.js"],
+      js: ["features/youtube-float/main.js"],
       css: [],
       world: "MAIN",
       runAt: "document_idle",
@@ -78,7 +78,7 @@ test("each enabled feature becomes one registration per world", () => {
 });
 
 test("disabled features are left out", () => {
-  const specs = desiredContentScripts([COMMENT_MODE, RIGHT_CLICK], { "comment-mode": { enabled: false, disabledHosts: [] } });
+  const specs = desiredContentScripts([YOUTUBE_FLOAT, RIGHT_CLICK], { "youtube-float": { enabled: false, disabledHosts: [] } });
   assert.deepEqual(specs.map((s) => s.id), ["enable-right-click:main"]);
 });
 

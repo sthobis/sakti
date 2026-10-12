@@ -1,4 +1,4 @@
-// Comment Mode content script: once the YouTube player has scrolled out of
+// YouTube Float content script: once the YouTube player has scrolled out of
 // view, keeps it floating in a small draggable, resizable window so the video
 // plays on while you read the comments.
 
@@ -60,7 +60,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // --- State ---------------------------------------------------------------
 
   let dismissed = false; // closed by hand; stays docked until the next video
-  let wrapper: HTMLDivElement | null = null; // #cmode-player, non-null while floating
+  let wrapper: HTMLDivElement | null = null; // #ytfloat-player, non-null while floating
   let placeholder: Comment | null = null; // marks where #movie_player came from
   let slot: Element | null = null; // the element the player was lifted out of (#ytd-player)
   let saved: Geometry | null = null; // { top, left, width, height } from storage
@@ -159,13 +159,13 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     // Build everything before touching the player so a failure here cannot
     // leave the page without its video. No HTML-string sinks: YouTube
     // enforces Trusted Types, which blocks innerHTML/insertAdjacentHTML.
-    wrapper = el("div", { id: "cmode-player" }, [buildControls()]);
+    wrapper = el("div", { id: "ytfloat-player" }, [buildControls()]);
     applyGeometry(initialGeometry());
 
     slot = player.closest("#ytd-player") || player.parentElement;
-    placeholder = document.createComment("cmode-player-placeholder");
+    placeholder = document.createComment("ytfloat-player-placeholder");
     player.replaceWith(placeholder);
-    player.classList.add("cmode-video");
+    player.classList.add("ytfloat-video");
     wrapper!.prepend(player);
     document.body.appendChild(wrapper!);
 
@@ -201,7 +201,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     }
 
     if (player) {
-      player.classList.remove("cmode-video");
+      player.classList.remove("ytfloat-video");
       if (placeholder && placeholder.parentNode) {
         placeholder.replaceWith(player);
       } else {
@@ -225,7 +225,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     const { d, solid, text, textY } = ICONS[name];
     const svg = document.createElementNS(SVG_NS, "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("class", `cmode-icon cmode-icon-${name}${solid ? " cmode-icon-solid" : ""}`);
+    svg.setAttribute("class", `ytfloat-icon ytfloat-icon-${name}${solid ? " ytfloat-icon-solid" : ""}`);
     svg.setAttribute("aria-hidden", "true");
     const path = document.createElementNS(SVG_NS, "path");
     path.setAttribute("d", d);
@@ -248,44 +248,44 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   ) {
     return el(
       "button",
-      { class: "cmode-btn", type: "button", title, "aria-label": title, dataset: { action }, ...attrs },
+      { class: "ytfloat-btn", type: "button", title, "aria-label": title, dataset: { action }, ...attrs },
       children
     );
   }
 
   function buildControls() {
-    return el("div", { class: "cmode-ui" }, [
-      ...Object.keys(CORNERS).map((corner) => el("div", { class: "cmode-resizer", dataset: { corner } })),
-      button("close", "Close until the next video", [icon("close")], { class: "cmode-btn cmode-close" }),
+    return el("div", { class: "ytfloat-ui" }, [
+      ...Object.keys(CORNERS).map((corner) => el("div", { class: "ytfloat-resizer", dataset: { corner } })),
+      button("close", "Close until the next video", [icon("close")], { class: "ytfloat-btn ytfloat-close" }),
       // Click zones over the picture: back 10s | play/pause | forward 10s.
-      el("div", { class: "cmode-zones" }, [
-        el("div", { class: "cmode-zone", dataset: { action: "back" }, title: `Back ${SKIP_SECONDS} seconds` }, [icon("back")]),
-        el("div", { class: "cmode-zone", dataset: { action: "play" }, title: "Play or pause" }, [icon("play"), icon("pause")]),
-        el("div", { class: "cmode-zone", dataset: { action: "forward" }, title: `Forward ${SKIP_SECONDS} seconds` }, [icon("forward")]),
+      el("div", { class: "ytfloat-zones" }, [
+        el("div", { class: "ytfloat-zone", dataset: { action: "back" }, title: `Back ${SKIP_SECONDS} seconds` }, [icon("back")]),
+        el("div", { class: "ytfloat-zone", dataset: { action: "play" }, title: "Play or pause" }, [icon("play"), icon("pause")]),
+        el("div", { class: "ytfloat-zone", dataset: { action: "forward" }, title: `Forward ${SKIP_SECONDS} seconds` }, [icon("forward")]),
       ]),
-      el("div", { class: "cmode-badge" }),
+      el("div", { class: "ytfloat-badge" }),
       el(
         "div",
-        { class: "cmode-menu", hidden: "", dataset: { menu: "size" } },
+        { class: "ytfloat-menu", hidden: "", dataset: { menu: "size" } },
         Object.keys(SIZES).map((size) => button("resize", `Size ${size}`, [size], { dataset: { action: "resize", size } }))
       ),
-      el("div", { class: "cmode-menu", hidden: "", dataset: { menu: "speed" } }, rateButtons(DEFAULT_RATES)),
-      el("div", { class: "cmode-bar" }, [
-        el("div", { class: "cmode-scrub", title: "Seek" }, [
-          el("div", { class: "cmode-scrub-track" }, [
-            el("div", { class: "cmode-scrub-fill" }),
-            el("div", { class: "cmode-scrub-thumb" }),
+      el("div", { class: "ytfloat-menu", hidden: "", dataset: { menu: "speed" } }, rateButtons(DEFAULT_RATES)),
+      el("div", { class: "ytfloat-bar" }, [
+        el("div", { class: "ytfloat-scrub", title: "Seek" }, [
+          el("div", { class: "ytfloat-scrub-track" }, [
+            el("div", { class: "ytfloat-scrub-fill" }),
+            el("div", { class: "ytfloat-scrub-thumb" }),
           ]),
         ]),
-        el("div", { class: "cmode-row" }, [
-          el("div", { class: "cmode-time" }, [
-            el("span", { class: "cmode-current", text: "0:00" }),
-            el("span", { class: "cmode-duration" }),
+        el("div", { class: "ytfloat-row" }, [
+          el("div", { class: "ytfloat-time" }, [
+            el("span", { class: "ytfloat-current", text: "0:00" }),
+            el("span", { class: "ytfloat-duration" }),
           ]),
-          el("div", { class: "cmode-spacer" }),
-          button("captions", "Subtitles", [icon("captions")], { class: "cmode-btn cmode-captions", "aria-pressed": "false" }),
+          el("div", { class: "ytfloat-spacer" }),
+          button("captions", "Subtitles", [icon("captions")], { class: "ytfloat-btn ytfloat-captions", "aria-pressed": "false" }),
           button("menu", "Playback speed (click to choose, scroll to step)", ["1x"], {
-            class: "cmode-btn cmode-speed",
+            class: "ytfloat-btn ytfloat-speed",
             dataset: { action: "menu", menu: "speed" },
           }),
           button("menu", "Window size", [icon("size")], { dataset: { action: "menu", menu: "size" } }),
@@ -360,7 +360,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // --- Controls ------------------------------------------------------------
 
   function bindControls(video: HTMLVideoElement) {
-    const menus = [...wrapper!.querySelectorAll<HTMLElement>(".cmode-menu")];
+    const menus = [...wrapper!.querySelectorAll<HTMLElement>(".ytfloat-menu")];
     const closeMenus = (except?: HTMLElement) => menus.forEach((menu) => menu !== except && (menu.hidden = true));
 
     const actions: Record<string, (btn?: HTMLElement) => void> = {
@@ -407,8 +407,8 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
 
     wrapper!.addEventListener("mousedown", startDrag);
     wrapper!.addEventListener("wheel", onWheel, { passive: false });
-    wrapper!.querySelector<HTMLElement>(".cmode-scrub")!.addEventListener("mousedown", (e) => startScrub(e, video));
-    for (const handle of wrapper!.querySelectorAll<HTMLElement>(".cmode-resizer")) {
+    wrapper!.querySelector<HTMLElement>(".ytfloat-scrub")!.addEventListener("mousedown", (e) => startScrub(e, video));
+    for (const handle of wrapper!.querySelectorAll<HTMLElement>(".ytfloat-resizer")) {
       handle.addEventListener("mousedown", startResize);
     }
   }
@@ -441,12 +441,12 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   }
 
   function updatePlayState(video: HTMLVideoElement) {
-    if (wrapper) wrapper.classList.toggle("cmode-paused", video.paused);
+    if (wrapper) wrapper.classList.toggle("ytfloat-paused", video.paused);
   }
 
   function updateSpeed(video: HTMLVideoElement) {
     if (!wrapper) return;
-    wrapper.querySelector(".cmode-speed")!.textContent = `${video.playbackRate}x`;
+    wrapper.querySelector(".ytfloat-speed")!.textContent = `${video.playbackRate}x`;
     for (const btn of wrapper.querySelectorAll<HTMLElement>("[data-rate]")) {
       btn.setAttribute("aria-checked", String(Number(btn.dataset.rate) === video.playbackRate));
     }
@@ -455,7 +455,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // The speeds on offer come from YouTube's player; rebuild the menu if they
   // are not the ones it was built with.
   function updateRates(rates: number[]) {
-    const menu = wrapper!.querySelector<HTMLElement>('[data-menu="speed"].cmode-menu')!;
+    const menu = wrapper!.querySelector<HTMLElement>('[data-menu="speed"].ytfloat-menu')!;
     const current = [...menu.querySelectorAll<HTMLElement>("[data-rate]")].map((btn) => Number(btn.dataset.rate));
     if (rates.length === current.length && rates.every((rate, i) => rate === current[i])) return;
     menu.replaceChildren(...rateButtons(rates));
@@ -465,7 +465,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // --- Ads / end of video --------------------------------------------------
 
   function isAd() {
-    return !!wrapper && wrapper.classList.contains("cmode-ad");
+    return !!wrapper && wrapper.classList.contains("ytfloat-ad");
   }
 
   // The floating window hides YouTube's own overlays, which would leave an ad
@@ -477,7 +477,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     if (!player) return;
     // Not the video's "ended" event: that also fires when an ad finishes.
     if (player.classList.contains(ENDED_CLASS)) dock();
-    else wrapper!.classList.toggle("cmode-ad", player.classList.contains(AD_CLASS));
+    else wrapper!.classList.toggle("ytfloat-ad", player.classList.contains(AD_CLASS));
   }
 
   // --- Volume / speed ------------------------------------------------------
@@ -485,7 +485,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   // Volume, speed and subtitles go through YouTube's player API (see main.ts). Setting
   // them on the <video> directly leaves YouTube's own controls and remembered
   // settings out of sync.
-  const bridge = createChannel<PlayerCommand, PlayerState>("comment-mode", "isolated");
+  const bridge = createChannel<PlayerCommand, PlayerState>("youtube-float", "isolated");
 
   function command(detail: PlayerCommand): void {
     bridge.send(detail);
@@ -494,7 +494,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   bridge.onMessage((state) => {
     if (!wrapper) return;
     if (Array.isArray(state.rates) && state.rates.length) updateRates(state.rates);
-    wrapper.querySelector(".cmode-captions")!.setAttribute("aria-pressed", String(Boolean(state.captions)));
+    wrapper.querySelector(".ytfloat-captions")!.setAttribute("aria-pressed", String(Boolean(state.captions)));
 
     if (typeof state.volume === "number") {
       showBadge(state.muted ? "Muted" : `Volume ${Math.round(state.volume)}%`);
@@ -512,7 +512,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     wheelDelta -= steps * WHEEL_NOTCH_PX;
 
     // Wheel up is negative deltaY.
-    if ((e.target as Element).closest(".cmode-speed")) {
+    if ((e.target as Element).closest(".ytfloat-speed")) {
       if (!isAd()) command({ type: "rateStep", step: -steps });
     } else {
       command({ type: "volumeBy", delta: -steps * VOLUME_STEP });
@@ -520,16 +520,16 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
   }
 
   function showBadge(text: string) {
-    const badge = wrapper!.querySelector(".cmode-badge")!;
+    const badge = wrapper!.querySelector(".ytfloat-badge")!;
     badge.textContent = text;
-    badge.classList.add("cmode-badge-show");
+    badge.classList.add("ytfloat-badge-show");
     clearTimeout(badgeTimer);
-    badgeTimer = setTimeout(() => badge.classList.remove("cmode-badge-show"), 900);
+    badgeTimer = setTimeout(() => badge.classList.remove("ytfloat-badge-show"), 900);
   }
 
   // --- Drag ----------------------------------------------------------------
 
-  const NON_DRAG_TARGETS = "button, .cmode-resizer, .cmode-scrub, .cmode-menu";
+  const NON_DRAG_TARGETS = "button, .ytfloat-resizer, .ytfloat-scrub, .ytfloat-menu";
 
   // Runs `onMove` for every mousemove until the button is released.
   function trackPointer(onMove: (ev: MouseEvent) => void, onUp: (ev: MouseEvent) => void) {
@@ -566,7 +566,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
           return; // a wobble during a click is not a drag
         }
         gestureMoved = true;
-        wrapper!.classList.add("cmode-gesture");
+        wrapper!.classList.add("ytfloat-gesture");
         const maxLeft = window.innerWidth - rect.width - EDGE_MARGIN;
         const maxTop = window.innerHeight - rect.height - EDGE_MARGIN;
         wrapper!.style.left = `${Math.min(maxLeft, Math.max(EDGE_MARGIN, ev.clientX - offsetX))}px`;
@@ -574,7 +574,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
       },
       () => {
         if (!gestureMoved) return;
-        wrapper!.classList.remove("cmode-gesture");
+        wrapper!.classList.remove("ytfloat-gesture");
         saveGeometry();
       }
     );
@@ -595,7 +595,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     let maxWidth = Infinity;
     if (corner.left) maxWidth = start.right - EDGE_MARGIN;
     if (corner.top) maxWidth = Math.min(maxWidth, (start.bottom - TOP_MARGIN) / ratio);
-    wrapper!.classList.add("cmode-gesture");
+    wrapper!.classList.add("ytfloat-gesture");
 
     trackPointer(
       (ev) => {
@@ -610,7 +610,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
         if (corner.top) wrapper!.style.top = `${start.bottom - height}px`;
       },
       () => {
-        wrapper!.classList.remove("cmode-gesture");
+        wrapper!.classList.remove("ytfloat-gesture");
         saveGeometry();
       }
     );
@@ -622,7 +622,7 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
-    const track = wrapper!.querySelector(".cmode-scrub-track")!;
+    const track = wrapper!.querySelector(".ytfloat-scrub-track")!;
     const seek = (ev: MouseEvent) => {
       if (!wrapper) return;
       gestureMoved = ev !== e;
@@ -630,9 +630,9 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
       const fraction = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
       seekTo(video, fraction * video.duration);
     };
-    wrapper!.classList.add("cmode-gesture");
+    wrapper!.classList.add("ytfloat-gesture");
     seek(e);
-    trackPointer(seek, () => wrapper!.classList.remove("cmode-gesture"));
+    trackPointer(seek, () => wrapper!.classList.remove("ytfloat-gesture"));
   }
 
   function updateTime() {
@@ -641,10 +641,10 @@ import type { PlayerCommand, PlayerState } from "./protocol.ts";
     if (!video || !Number.isFinite(video.duration) || video.duration === 0) return;
 
     const percent = (video.currentTime / video.duration) * 100;
-    wrapper!.querySelector<HTMLElement>(".cmode-scrub-fill")!.style.width = `${percent}%`;
-    wrapper!.querySelector<HTMLElement>(".cmode-scrub-thumb")!.style.left = `${percent}%`;
-    wrapper!.querySelector(".cmode-current")!.textContent = formatTime(video.currentTime);
-    wrapper!.querySelector(".cmode-duration")!.textContent = ` / ${formatTime(video.duration)}`;
+    wrapper!.querySelector<HTMLElement>(".ytfloat-scrub-fill")!.style.width = `${percent}%`;
+    wrapper!.querySelector<HTMLElement>(".ytfloat-scrub-thumb")!.style.left = `${percent}%`;
+    wrapper!.querySelector(".ytfloat-current")!.textContent = formatTime(video.currentTime);
+    wrapper!.querySelector(".ytfloat-duration")!.textContent = ` / ${formatTime(video.duration)}`;
   }
 
   function formatTime(totalSeconds: number) {

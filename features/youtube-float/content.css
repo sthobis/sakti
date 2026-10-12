@@ -1,10 +1,10 @@
-/* Comment Mode: the floating player window and its controls. Everything is
-   prefixed cmode- because these rules live inside YouTube's own page. */
+/* YouTube Float: the floating player window and its controls. Everything is
+   prefixed ytfloat- because these rules live inside YouTube's own page. */
 
-#cmode-player {
-  --cmode-accent: #8b7bff;
-  --cmode-glass: rgba(20, 20, 24, 0.62);
-  --cmode-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+#ytfloat-player {
+  --ytfloat-accent: #8b7bff;
+  --ytfloat-glass: rgba(20, 20, 24, 0.62);
+  --ytfloat-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   position: fixed;
   z-index: 3000;
@@ -14,36 +14,36 @@
   border-radius: 12px;
   background: #000;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  container: cmode / inline-size;
-  transition: width 220ms var(--cmode-ease), height 220ms var(--cmode-ease),
-    left 220ms var(--cmode-ease), top 220ms var(--cmode-ease);
+  container: ytfloat / inline-size;
+  transition: width 220ms var(--ytfloat-ease), height 220ms var(--ytfloat-ease),
+    left 220ms var(--ytfloat-ease), top 220ms var(--ytfloat-ease);
 }
 
 /* No easing while the pointer is moving, resizing or scrubbing. */
-#cmode-player.cmode-gesture {
+#ytfloat-player.ytfloat-gesture {
   transition: none;
 }
 
 /* --- The lifted YouTube player ------------------------------------------ */
 
-.cmode-video {
+.ytfloat-video {
   position: absolute !important;
   z-index: -1;
   top: 0 !important;
   left: 0 !important;
 }
 
-#cmode-player #movie_player > *:not(.ytp-caption-window-container) {
+#ytfloat-player #movie_player > *:not(.ytp-caption-window-container) {
   display: none;
 }
 
-#cmode-player #movie_player > .html5-video-container {
+#ytfloat-player #movie_player > .html5-video-container {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-#cmode-player #movie_player > .html5-video-container .video-stream {
+#ytfloat-player #movie_player > .html5-video-container .video-stream {
   width: 100% !important;
   height: 100% !important;
   top: 0 !important;
@@ -52,31 +52,31 @@
 
 /* Subtitles are laid out inside this box, so shortening it while the control
    bar shows keeps them readable above the bar. */
-#cmode-player:hover #movie_player > .ytp-caption-window-container,
-#cmode-player.cmode-gesture #movie_player > .ytp-caption-window-container,
-#cmode-player.cmode-paused #movie_player > .ytp-caption-window-container {
+#ytfloat-player:hover #movie_player > .ytp-caption-window-container,
+#ytfloat-player.ytfloat-gesture #movie_player > .ytp-caption-window-container,
+#ytfloat-player.ytfloat-paused #movie_player > .ytp-caption-window-container {
   height: calc(100% - 56px) !important;
 }
 
 /* During an ad, let YouTube's ad overlay through so its real Skip button can
-   be clicked. The player comes above .cmode-ui but ignores the pointer,
+   be clicked. The player comes above .ytfloat-ui but ignores the pointer,
    except for the ad overlay's buttons, so dragging and our bar still work. */
-#cmode-player.cmode-ad #movie_player > .video-ads {
+#ytfloat-player.ytfloat-ad #movie_player > .video-ads {
   display: block;
 }
 
-#cmode-player.cmode-ad .cmode-video {
+#ytfloat-player.ytfloat-ad .ytfloat-video {
   z-index: 0;
   pointer-events: none;
 }
 
-#cmode-player.cmode-ad .video-ads button {
+#ytfloat-player.ytfloat-ad .video-ads button {
   pointer-events: auto;
 }
 
 /* --- Overlay -------------------------------------------------------------- */
 
-.cmode-ui {
+.ytfloat-ui {
   position: absolute;
   inset: 0;
   cursor: grab;
@@ -85,31 +85,31 @@
   user-select: none;
 }
 
-#cmode-player.cmode-gesture .cmode-ui {
+#ytfloat-player.ytfloat-gesture .ytfloat-ui {
   cursor: grabbing;
 }
 
 /* Controls stay out of the way until the pointer arrives or playback stops. */
-.cmode-bar,
-.cmode-close {
+.ytfloat-bar,
+.ytfloat-close {
   opacity: 0;
   visibility: hidden;
   transition: opacity 160ms ease, visibility 160ms;
 }
 
-#cmode-player:hover .cmode-bar,
-#cmode-player:hover .cmode-close,
-#cmode-player.cmode-gesture .cmode-bar,
-#cmode-player.cmode-paused .cmode-bar {
+#ytfloat-player:hover .ytfloat-bar,
+#ytfloat-player:hover .ytfloat-close,
+#ytfloat-player.ytfloat-gesture .ytfloat-bar,
+#ytfloat-player.ytfloat-paused .ytfloat-bar {
   opacity: 1;
   visibility: visible;
 }
 
-.cmode-bar,
-.cmode-menu,
-.cmode-close,
-.cmode-badge {
-  background: var(--cmode-glass);
+.ytfloat-bar,
+.ytfloat-menu,
+.ytfloat-close,
+.ytfloat-badge {
+  background: var(--ytfloat-glass);
   -webkit-backdrop-filter: blur(14px) saturate(1.5);
   backdrop-filter: blur(14px) saturate(1.5);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -117,7 +117,7 @@
 
 /* --- Buttons -------------------------------------------------------------- */
 
-.cmode-btn {
+.ytfloat-btn {
   box-sizing: border-box;
   display: inline-flex;
   flex: none;
@@ -136,20 +136,20 @@
   transition: background-color 120ms ease, color 120ms ease;
 }
 
-.cmode-btn:hover {
+.ytfloat-btn:hover {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.cmode-btn:active {
+.ytfloat-btn:active {
   background: rgba(255, 255, 255, 0.26);
 }
 
-.cmode-btn:focus-visible {
-  outline: 2px solid var(--cmode-accent);
+.ytfloat-btn:focus-visible {
+  outline: 2px solid var(--ytfloat-accent);
   outline-offset: 1px;
 }
 
-.cmode-icon {
+.ytfloat-icon {
   width: 18px;
   height: 18px;
   fill: none;
@@ -160,28 +160,28 @@
   pointer-events: none;
 }
 
-.cmode-icon-solid {
+.ytfloat-icon-solid {
   fill: currentColor;
   stroke-width: 1;
 }
 
-.cmode-icon text {
+.ytfloat-icon text {
   fill: currentColor;
   stroke: none;
   font: 700 7px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   text-anchor: middle;
 }
 
-.cmode-icon-captions text {
+.ytfloat-icon-captions text {
   font-size: 6.5px;
 }
 
 /* A switched-on toggle (subtitles) gets an accent underline. */
-.cmode-btn[aria-pressed] {
+.ytfloat-btn[aria-pressed] {
   position: relative;
 }
 
-.cmode-btn[aria-pressed="true"]::after {
+.ytfloat-btn[aria-pressed="true"]::after {
   content: "";
   position: absolute;
   right: 6px;
@@ -189,29 +189,29 @@
   left: 6px;
   height: 2px;
   border-radius: 2px;
-  background: var(--cmode-accent);
+  background: var(--ytfloat-accent);
 }
 
-.cmode-icon-play,
-#cmode-player.cmode-paused .cmode-icon-pause {
+.ytfloat-icon-play,
+#ytfloat-player.ytfloat-paused .ytfloat-icon-pause {
   display: none;
 }
 
-#cmode-player.cmode-paused .cmode-icon-play {
+#ytfloat-player.ytfloat-paused .ytfloat-icon-play {
   display: block;
 }
 
 /* Paused: the whole picture resumes playback, so only the play icon shows. */
-#cmode-player.cmode-paused .cmode-zone[data-action="play"] .cmode-icon-play {
+#ytfloat-player.ytfloat-paused .ytfloat-zone[data-action="play"] .ytfloat-icon-play {
   opacity: 1;
   transform: scale(1);
 }
 
-#cmode-player.cmode-paused .cmode-zone:not([data-action="play"]) .cmode-icon {
+#ytfloat-player.ytfloat-paused .ytfloat-zone:not([data-action="play"]) .ytfloat-icon {
   display: none;
 }
 
-.cmode-close {
+.ytfloat-close {
   position: absolute;
   z-index: 2;
   top: 8px;
@@ -221,11 +221,11 @@
   border-radius: 50%;
 }
 
-.cmode-close:hover {
+.ytfloat-close:hover {
   background: rgba(20, 20, 24, 0.85);
 }
 
-.cmode-close .cmode-icon {
+.ytfloat-close .ytfloat-icon {
   width: 14px;
   height: 14px;
 }
@@ -235,52 +235,52 @@
    zone shows its icon while the pointer is over it. The zones are also the
    drag surface, so no buttons here: a plain div keeps startDrag happy. */
 
-.cmode-zones {
+.ytfloat-zones {
   position: absolute;
   inset: 0;
   display: flex;
 }
 
-.cmode-zone {
+.ytfloat-zone {
   display: flex;
   flex: 0 0 40%;
   align-items: center;
   justify-content: center;
 }
 
-.cmode-zone[data-action="play"] {
+.ytfloat-zone[data-action="play"] {
   flex-basis: 20%;
 }
 
-.cmode-zone .cmode-icon {
+.ytfloat-zone .ytfloat-icon {
   width: 30px;
   height: 30px;
   padding: 9px;
   border-radius: 50%;
-  background: var(--cmode-glass);
+  background: var(--ytfloat-glass);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 140ms ease, transform 140ms ease;
 }
 
-.cmode-zone:hover .cmode-icon,
-#cmode-player.cmode-paused .cmode-zone[data-action="play"] .cmode-icon-play {
+.ytfloat-zone:hover .ytfloat-icon,
+#ytfloat-player.ytfloat-paused .ytfloat-zone[data-action="play"] .ytfloat-icon-play {
   opacity: 1;
   transform: scale(1);
 }
 
-#cmode-player.cmode-gesture .cmode-zone .cmode-icon {
+#ytfloat-player.ytfloat-gesture .ytfloat-zone .ytfloat-icon {
   opacity: 0;
 }
 
-.cmode-zone .cmode-icon text {
+.ytfloat-zone .ytfloat-icon text {
   font-size: 6.5px;
 }
 
 /* --- Control bar ---------------------------------------------------------- */
 
-.cmode-bar {
+.ytfloat-bar {
   position: absolute;
   z-index: 2;
   right: 8px;
@@ -291,27 +291,27 @@
   cursor: default;
 }
 
-.cmode-row {
+.ytfloat-row {
   display: flex;
   align-items: center;
   gap: 2px;
 }
 
-.cmode-spacer {
+.ytfloat-spacer {
   flex: 1;
 }
 
-.cmode-time {
+.ytfloat-time {
   margin-left: 6px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-.cmode-duration {
+.ytfloat-duration {
   color: rgba(255, 255, 255, 0.6);
 }
 
-.cmode-speed {
+.ytfloat-speed {
   width: auto;
   min-width: 36px;
   padding: 0 6px;
@@ -320,14 +320,14 @@
 }
 
 /* The smallest window has no room for the total duration. */
-@container cmode (max-width: 380px) {
-  .cmode-duration {
+@container ytfloat (max-width: 380px) {
+  .ytfloat-duration {
     display: none;
   }
 }
 
 /* Scrubber: a tall hit area around a thin track. */
-.cmode-scrub {
+.ytfloat-scrub {
   display: flex;
   align-items: center;
   height: 14px;
@@ -335,7 +335,7 @@
   cursor: pointer;
 }
 
-.cmode-scrub-track {
+.ytfloat-scrub-track {
   position: relative;
   flex: 1;
   height: 3px;
@@ -344,19 +344,19 @@
   transition: height 120ms ease;
 }
 
-.cmode-scrub:hover .cmode-scrub-track,
-#cmode-player.cmode-gesture .cmode-scrub-track {
+.ytfloat-scrub:hover .ytfloat-scrub-track,
+#ytfloat-player.ytfloat-gesture .ytfloat-scrub-track {
   height: 5px;
 }
 
-.cmode-scrub-fill {
+.ytfloat-scrub-fill {
   width: 0;
   height: 100%;
   border-radius: inherit;
-  background: var(--cmode-accent);
+  background: var(--ytfloat-accent);
 }
 
-.cmode-scrub-thumb {
+.ytfloat-scrub-thumb {
   position: absolute;
   top: 50%;
   left: 0;
@@ -369,26 +369,26 @@
   transition: transform 120ms ease;
 }
 
-.cmode-scrub:hover .cmode-scrub-thumb,
-#cmode-player.cmode-gesture .cmode-scrub-thumb {
+.ytfloat-scrub:hover .ytfloat-scrub-thumb,
+#ytfloat-player.ytfloat-gesture .ytfloat-scrub-thumb {
   transform: translate(-50%, -50%) scale(1);
 }
 
 /* Seeking, speed and subtitles are YouTube's call while an ad plays. */
-#cmode-player.cmode-ad .cmode-scrub,
-#cmode-player.cmode-ad .cmode-zone:not([data-action="play"]) .cmode-icon,
-#cmode-player.cmode-ad .cmode-speed,
-#cmode-player.cmode-ad .cmode-captions {
+#ytfloat-player.ytfloat-ad .ytfloat-scrub,
+#ytfloat-player.ytfloat-ad .ytfloat-zone:not([data-action="play"]) .ytfloat-icon,
+#ytfloat-player.ytfloat-ad .ytfloat-speed,
+#ytfloat-player.ytfloat-ad .ytfloat-captions {
   display: none;
 }
 
-#cmode-player.cmode-ad .cmode-bar {
+#ytfloat-player.ytfloat-ad .ytfloat-bar {
   padding-top: 3px;
 }
 
 /* --- Menus / badge ---------------------------------------------------------- */
 
-.cmode-menu {
+.ytfloat-menu {
   position: absolute;
   z-index: 2;
   right: 8px;
@@ -400,39 +400,39 @@
   cursor: default;
 }
 
-.cmode-menu .cmode-btn {
+.ytfloat-menu .ytfloat-btn {
   font-weight: 700;
 }
 
 /* Speed menu: two columns while the window is short, a plain list once
    there is room for one. */
-.cmode-menu[data-menu="speed"] {
+.ytfloat-menu[data-menu="speed"] {
   right: 40px;
   display: grid;
   grid-template-columns: repeat(2, auto);
 }
 
-.cmode-menu[data-menu="speed"] .cmode-btn {
+.ytfloat-menu[data-menu="speed"] .ytfloat-btn {
   width: 46px;
   height: 24px;
   font-variant-numeric: tabular-nums;
 }
 
-.cmode-menu .cmode-btn[aria-checked="true"] {
-  background: var(--cmode-accent);
+.ytfloat-menu .ytfloat-btn[aria-checked="true"] {
+  background: var(--ytfloat-accent);
 }
 
-@container cmode (min-width: 600px) {
-  .cmode-menu[data-menu="speed"] {
+@container ytfloat (min-width: 600px) {
+  .ytfloat-menu[data-menu="speed"] {
     grid-template-columns: auto;
   }
 }
 
-.cmode-menu[hidden] {
+.ytfloat-menu[hidden] {
   display: none;
 }
 
-.cmode-badge {
+.ytfloat-badge {
   position: absolute;
   z-index: 2;
   top: 10px;
@@ -447,27 +447,27 @@
   transition: opacity 150ms ease;
 }
 
-.cmode-badge.cmode-badge-show {
+.ytfloat-badge.ytfloat-badge-show {
   opacity: 1;
 }
 
 /* --- Resize handles ------------------------------------------------------- */
 
-.cmode-resizer {
+.ytfloat-resizer {
   position: absolute;
   z-index: 3;
   width: 16px;
   height: 16px;
 }
 
-.cmode-resizer[data-corner="tl"] { top: 0; left: 0; cursor: nwse-resize; }
-.cmode-resizer[data-corner="tr"] { top: 0; right: 0; cursor: nesw-resize; }
-.cmode-resizer[data-corner="bl"] { bottom: 0; left: 0; cursor: nesw-resize; }
-.cmode-resizer[data-corner="br"] { right: 0; bottom: 0; cursor: nwse-resize; }
+.ytfloat-resizer[data-corner="tl"] { top: 0; left: 0; cursor: nwse-resize; }
+.ytfloat-resizer[data-corner="tr"] { top: 0; right: 0; cursor: nesw-resize; }
+.ytfloat-resizer[data-corner="bl"] { bottom: 0; left: 0; cursor: nesw-resize; }
+.ytfloat-resizer[data-corner="br"] { right: 0; bottom: 0; cursor: nwse-resize; }
 
 @media (prefers-reduced-motion: reduce) {
-  #cmode-player,
-  #cmode-player * {
+  #ytfloat-player,
+  #ytfloat-player * {
     transition: none !important;
   }
 }

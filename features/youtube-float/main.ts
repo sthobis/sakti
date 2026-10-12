@@ -1,4 +1,4 @@
-// Comment Mode page script: runs in the page's own JS world because YouTube's
+// YouTube Float page script: runs in the page's own JS world because YouTube's
 // player API lives on #movie_player there and is invisible to the isolated
 // content script. content.ts sends commands over the Sakti bridge and gets
 // the result back the same way.
@@ -29,7 +29,7 @@ interface YouTubePlayer extends HTMLElement {
 
 const CAPTIONS_SETTLE_MS = 250; // isSubtitlesOn() lags the toggle a little
 
-const bridge = createChannel<PlayerState, PlayerCommand>("comment-mode", "main");
+const bridge = createChannel<PlayerState, PlayerCommand>("youtube-float", "main");
 
 bridge.onMessage((cmd) => {
   const player = document.querySelector<YouTubePlayer>("#movie_player");

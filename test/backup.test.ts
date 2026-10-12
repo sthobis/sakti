@@ -6,11 +6,11 @@ const SOURCE = "// ==UserScript==\n// @name Fix Fonts\n// @match https://a.com/*
 const META = { name: "Fix Fonts", matches: ["https://a.com/*"], excludeMatches: [], runAt: "document_idle" as const, world: "MAIN" as const };
 
 const snapshot: Snapshot = {
-  features: { "comment-mode": { enabled: false, disabledHosts: [] } },
+  features: { "youtube-float": { enabled: false, disabledHosts: [] } },
   userscripts: {
     "fix-fonts": { id: "fix-fonts", enabled: true, source: SOURCE, meta: META, updatedAt: "2026-09-01T00:00:00.000Z", disabledHosts: ["b.com"] },
   },
-  settings: { sync: { "feature:comment-mode": { geometry: { top: 1, left: 2, width: 3, height: 4 } } }, local: {} },
+  settings: { sync: { "feature:youtube-float": { geometry: { top: 1, left: 2, width: 3, height: 4 } } }, local: {} },
 };
 
 test("pickSettings keeps only feature settings keys", () => {
@@ -56,13 +56,13 @@ test("import rejects a userscript whose header is invalid", () => {
 
 test("merge replaces entries with the same id and keeps local-only ones", () => {
   const local: Snapshot = {
-    features: { "comment-mode": { enabled: true, disabledHosts: [] }, "enable-right-click": { enabled: true, disabledHosts: ["x.com"] } },
+    features: { "youtube-float": { enabled: true, disabledHosts: [] }, "enable-right-click": { enabled: true, disabledHosts: ["x.com"] } },
     userscripts: {},
     settings: { sync: {}, local: { "feature:other": { a: 1 } } },
   };
   const merged = mergeImport(local, snapshot);
   assert.deepEqual(merged.features, {
-    "comment-mode": { enabled: false, disabledHosts: [] },
+    "youtube-float": { enabled: false, disabledHosts: [] },
     "enable-right-click": { enabled: true, disabledHosts: ["x.com"] },
   });
   assert.deepEqual(Object.keys(merged.userscripts), ["fix-fonts"]);
