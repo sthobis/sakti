@@ -73,6 +73,7 @@ async function buildOnce(): Promise<void> {
     { in: "src/worker/index.ts", out: "worker" },
     { in: "src/ui/popup/popup.ts", out: "popup" },
     { in: "src/ui/options/options.ts", out: "options" },
+    { in: "src/offscreen/index.ts", out: "offscreen" },
   ];
   for (const { feature, dir } of features) {
     if (feature.scripts.content) entryPoints.push({ in: path.join(dir, feature.scripts.content), out: `features/${feature.id}/content` });
@@ -106,6 +107,7 @@ async function buildOnce(): Promise<void> {
   fs.writeFileSync(path.join(DIST, "registry.json"), `${JSON.stringify(registry, null, 2)}\n`);
   fs.copyFileSync(path.join(ROOT, "src/ui/popup/popup.html"), path.join(DIST, "popup.html"));
   fs.copyFileSync(path.join(ROOT, "src/ui/options/options.html"), path.join(DIST, "options.html"));
+  fs.copyFileSync(path.join(ROOT, "src/offscreen/offscreen.html"), path.join(DIST, "offscreen.html"));
   fs.cpSync(path.join(ROOT, "icons"), path.join(DIST, "icons"), { recursive: true });
   fs.copyFileSync(path.join(ROOT, "LICENSE.md"), path.join(DIST, "LICENSE.md"));
 

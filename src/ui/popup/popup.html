@@ -12,15 +12,29 @@
     <h1>Sakti</h1>
     <button id="open-options" type="button">Options</button>
   </header>
-  <p id="host"></p>
-  <section id="here" hidden>
-    <h2>On this site</h2>
-    <ul></ul>
-  </section>
-  <section id="elsewhere">
-    <h2>Everything else</h2>
-    <ul></ul>
-  </section>
+  <nav id="tabs" role="tablist">
+    <button id="tab-videos" type="button" role="tab" aria-controls="panel-videos">Videos</button>
+    <button id="tab-features" type="button" role="tab" aria-controls="panel-features">Features</button>
+  </nav>
+  <div id="panel-videos" role="tabpanel" aria-labelledby="tab-videos" hidden>
+    <ul id="videos"></ul>
+    <p id="videos-empty" class="empty">No videos found on this page yet. Start the video, then open this again.</p>
+    <section id="jobs" hidden>
+      <h2>Downloads</h2>
+      <ul></ul>
+    </section>
+  </div>
+  <div id="panel-features" role="tabpanel" aria-labelledby="tab-features">
+    <p id="host"></p>
+    <section id="here" hidden>
+      <h2>On this site</h2>
+      <ul></ul>
+    </section>
+    <section id="elsewhere">
+      <h2>Everything else</h2>
+      <ul></ul>
+    </section>
+  </div>
   <footer id="version"></footer>
 </body>
 </html>

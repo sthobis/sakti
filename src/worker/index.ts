@@ -3,7 +3,9 @@
 
 import type { Message, StatusResponse } from "../core/messages.ts";
 import { refreshActiveBadge, refreshBadge } from "./badge.ts";
+import { handleMediaMessage, startMedia } from "./media.ts";
 import { scheduleReconcile, userScriptsAvailable } from "./registrar.ts";
+import { startSniffer } from "./sniffer.ts";
 
 chrome.runtime.onInstalled.addListener(() => {
   void scheduleReconcile();
@@ -29,6 +31,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
+  if (handleMediaMessage(message, sendResponse)) return true;
   if (message?.type === "sakti:reconcile") {
     scheduleReconcile().then(() => sendResponse({ ok: true }));
     return true; // keeps the channel open for the async response
@@ -39,5 +42,10 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
   }
   return false;
 });
+
+// Videos: listeners must be registered synchronously for Chrome to wake the
+// worker for them.
+startSniffer();
+startMedia();
 
 void chrome.action.setBadgeBackgroundColor({ color: "#8b7bff" });

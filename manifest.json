@@ -27,6 +27,16 @@
   "background": {
     "service_worker": "worker.js"
   },
-  "permissions": ["scripting", "storage", "tabs", "userScripts"],
+  "permissions": [
+    "declarativeNetRequestWithHostAccess",
+    "downloads",
+    "offscreen",
+    "scripting",
+    "storage",
+    "tabs",
+    "unlimitedStorage",
+    "userScripts",
+    "webRequest"
+  ],
   "host_permissions": []
 }

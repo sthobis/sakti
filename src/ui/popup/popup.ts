@@ -1,5 +1,5 @@
-// The popup answers one question: what is Sakti doing on this page, and can
-// I switch it off here?
+// The popup answers two questions: which videos has this page loaded, and
+// what is Sakti doing on this page that I can switch off here?
 
 import "./popup.css";
 import registry from "sakti:registry";
@@ -9,6 +9,7 @@ import { requestReconcile } from "../../core/messages.ts";
 import { featureState, toggleHost } from "../../core/state.ts";
 import { readState, updateFeature, updateUserscript } from "../../core/storage.ts";
 import { toggle } from "../common/toggle.ts";
+import { initVideos, type VideosState } from "./videos.ts";
 
 interface Row {
   kind: "feature" | "userscript";
@@ -115,11 +116,31 @@ function openOptions(row: Row): void {
   void chrome.tabs.create({ url: chrome.runtime.getURL(`options.html#${hash}`) });
 }
 
+type TabName = "videos" | "features";
+
+function showTab(name: TabName): void {
+  for (const other of ["videos", "features"] as const) {
+    document.getElementById(`tab-${other}`)!.setAttribute("aria-selected", String(other === name));
+    document.getElementById(`panel-${other}`)!.hidden = other !== name;
+  }
+}
+
+function labelVideosTab(state: VideosState): void {
+  document.getElementById("tab-videos")!.textContent = state.count ? `Videos (${state.count})` : "Videos";
+}
+
 async function main(): Promise<void> {
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  document.getElementById("tab-videos")!.addEventListener("click", () => showTab("videos"));
+  document.getElementById("tab-features")!.addEventListener("click", () => showTab("features"));
   document.getElementById("version")!.textContent = `v${chrome.runtime.getManifest().version}`;
   document.getElementById("open-options")!.addEventListener("click", () => void chrome.runtime.openOptionsPage());
   await render();
+
+  // Videos comes first when there is something to see in it.
+  const videos = await initVideos(tab, labelVideosTab);
+  labelVideosTab(videos);
+  showTab(videos.count > 0 || videos.busy ? "videos" : "features");
 }
 
 void main();
