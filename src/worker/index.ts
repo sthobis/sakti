@@ -2,7 +2,7 @@
 // in memory: everything it needs is re-read from storage on each event.
 
 import type { Message, StatusResponse } from "../core/messages.ts";
-import { refreshActiveBadge, refreshBadge } from "./badge.ts";
+import { refreshActiveBadge, refreshBadge, refreshTabBadge } from "./badge.ts";
 import { handleMediaMessage, startMedia } from "./media.ts";
 import { scheduleReconcile, userScriptsAvailable } from "./registrar.ts";
 import { startSniffer } from "./sniffer.ts";
@@ -15,16 +15,21 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "session") {
+    // A tab's detections changed: its video count may have too.
+    for (const key of Object.keys(changes)) {
+      const tabId = /^media:(\d+)$/.exec(key)?.[1];
+      if (tabId) void refreshTabBadge(Number(tabId));
+    }
+    return;
+  }
   if (areaName !== "local" || !(changes.features || changes.userscripts)) return;
   void scheduleReconcile();
   void refreshActiveBadge();
 });
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {
-  chrome.tabs.get(tabId).then(
-    (tab) => refreshBadge(tabId, tab.url),
-    () => {},
-  );
+  void refreshTabBadge(tabId);
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.url || changeInfo.status === "loading") void refreshBadge(tabId, tab.url);

@@ -301,8 +301,10 @@ and the CSS variables shared by both pages.
 
 ### Toolbar icon
 
-One icon. Badge shows the count of features/userscripts disabled on the
-current tab's host, or nothing. There is no global kill switch.
+One icon. Badge shows how many videos the current tab has loaded (the count
+the popup's Videos tab lists), or nothing. Its tooltip adds how many
+features/userscripts run on the tab's host and how many are switched off
+there. There is no global kill switch.
 
 ## Build
 
